@@ -98,75 +98,77 @@ static void Menu<T>(ListaDoble<T> lista, Func<string, T> convertir) where T : IC
         opcion = Console.ReadLine() ?? "";
         Console.WriteLine();
 
-        switch (opcion)
+        try
         {
-            case "1":
-                if (LeerDato(convertir, out T? nuevo))
-                {
-                    lista.Adicionar(nuevo!);
-                    Console.WriteLine("Elemento agregado.");
-                }
-                break;
+            switch (opcion)
+            {
+                case "1":
+                    if (LeerDato(convertir, out T? nuevo))
+                    {
+                        lista.Adicionar(nuevo!);
+                        Console.WriteLine("Elemento agregado.");
+                    }
+                    break;
 
-            case "2":
-                Console.WriteLine(lista.MostrarAdelante());
-                break;
+                case "2":
+                    Console.WriteLine(lista.MostrarAdelante());
+                    break;
 
-            case "3":
-                Console.WriteLine(lista.MostrarAtras());
-                break;
+                case "3":
+                    Console.WriteLine(lista.MostrarAtras());
+                    break;
 
-            case "4":
-                lista.OrdenarDescendentemente();
-                Console.WriteLine("Lista ordenada descendentemente.");
-                break;
+                case "4":
+                    lista.OrdenarDescendentemente();
+                    Console.WriteLine("Lista ordenada descendentemente.");
+                    break;
 
-            case "5":
-                Console.WriteLine(lista.MostrarModas());
-                break;
+                case "5":
+                    Console.WriteLine(lista.MostrarModas());
+                    break;
 
-            case "6":
-                Console.WriteLine(lista.MostrarGrafico());
-                break;
+                case "6":
+                    Console.WriteLine(lista.MostrarGrafico());
+                    break;
 
-            case "7":
-                if (LeerDato(convertir, out T? buscado))
-                {
-                    if (lista.Existe(buscado!))
-                        Console.WriteLine($"Sí existe el {buscado}.");
-                    else
-                        Console.WriteLine($"No existe el {buscado}.");
-                }
-                break;
+                case "7":
+                    if (LeerDato(convertir, out T? buscado))
+                    {
+                        if (lista.Existe(buscado!))
+                            Console.WriteLine($"Sí existe el {buscado}.");
+                        else
+                            Console.WriteLine($"No existe el {buscado}.");
+                    }
+                    break;
 
-            case "8":
-                if (LeerDato(convertir, out T? unico))
-                {
-                    if (lista.EliminarUna(unico!))
+                case "8":
+                    if (LeerDato(convertir, out T? unico))
+                    {
+                        lista.EliminarUna(unico!);
                         Console.WriteLine($"Se eliminó una ocurrencia del {unico}.");
-                    else
-                        Console.WriteLine($"No existe el {unico}.");
-                }
-                break;
+                    }
+                    break;
 
-            case "9":
-                if (LeerDato(convertir, out T? todos))
-                {
-                    int cuantos = lista.EliminarTodas(todos!);
-                    if (cuantos > 0)
+                case "9":
+                    if (LeerDato(convertir, out T? todos))
+                    {
+                        int cuantos = lista.EliminarTodas(todos!);
                         Console.WriteLine($"Se eliminaron {cuantos} ocurrencia(s) del {todos}.");
-                    else
-                        Console.WriteLine($"No existe el {todos}.");
-                }
-                break;
+                    }
+                    break;
 
-            case "0":
-                Console.WriteLine("Volviendo al árbol...");
-                break;
+                case "0":
+                    Console.WriteLine("Volviendo al árbol...");
+                    break;
 
-            default:
-                Console.WriteLine("Opción no válida.");
-                break;
+                default:
+                    Console.WriteLine("Opción no válida.");
+                    break;
+            }
+        }
+        catch (ListException ex)
+        {
+            Console.WriteLine(ex.Message);
         }
 
         Console.WriteLine();
