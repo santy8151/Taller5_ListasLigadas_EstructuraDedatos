@@ -1,19 +1,13 @@
-class NodoArbol
+namespace ListasLigadas;
+
+public class Nodo<T>
 {
-    public string Nombre { get; }
-    public NodoArbol? Padre { get; private set; }
-    public List<NodoArbol> Hijos { get; } = new List<NodoArbol>();
-    public Action? Accion { get; }
+    public T Dato { get; set; }
+    public Nodo<T>? Siguiente { get; set; }
+    public Nodo<T>? Anterior { get; set; }
 
-    public NodoArbol(string nombre, Action? accion = null)
+    public Nodo(T dato)
     {
-        Nombre = nombre;
-        Accion = accion;
-    }
-
-    public void Agregar(NodoArbol hijo)
-    {
-        hijo.Padre = this;
-        Hijos.Add(hijo);
+        Dato = dato;
     }
 }
