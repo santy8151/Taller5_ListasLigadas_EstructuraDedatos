@@ -59,7 +59,7 @@ public class ListaDoble<T> where T : IComparable<T>
 
     public string MostrarAdelante()
     {
-        if (cabeza == null) return "La lista está vacía.";
+        if (cabeza == null) throw new EmptyListException();
 
         StringBuilder sb = new StringBuilder();
         Nodo<T>? actual = cabeza;
@@ -74,7 +74,7 @@ public class ListaDoble<T> where T : IComparable<T>
 
     public string MostrarAtras()
     {
-        if (cola == null) return "La lista está vacía.";
+        if (cola == null) throw new EmptyListException();
 
         StringBuilder sb = new StringBuilder();
         Nodo<T>? actual = cola;
@@ -137,7 +137,7 @@ public class ListaDoble<T> where T : IComparable<T>
 
     public string MostrarModas()
     {
-        if (cabeza == null) return "La lista está vacía.";
+        if (cabeza == null) throw new EmptyListException();
 
         var ocurrencias = ObtenerOcurrencias();
 
@@ -165,7 +165,7 @@ public class ListaDoble<T> where T : IComparable<T>
 
     public string MostrarGrafico()
     {
-        if (cabeza == null) return "La lista está vacía.";
+        if (cabeza == null) throw new EmptyListException();
 
         StringBuilder sb = new StringBuilder();
         foreach (var o in ObtenerOcurrencias())
@@ -207,13 +207,12 @@ public class ListaDoble<T> where T : IComparable<T>
         cantidad--;
     }
 
-    public bool EliminarUna(T dato)
+    public void EliminarUna(T dato)
     {
         Nodo<T>? nodo = BuscarNodo(dato);
-        if (nodo == null) return false;
+        if (nodo == null) throw new ElementNotFoundException(dato!);
 
         DesenlazarNodo(nodo);
-        return true;
     }
 
     public int EliminarTodas(T dato)
@@ -232,6 +231,8 @@ public class ListaDoble<T> where T : IComparable<T>
             }
             actual = siguiente;
         }
+
+        if (eliminados == 0) throw new ElementNotFoundException(dato!);
 
         return eliminados;
     }
