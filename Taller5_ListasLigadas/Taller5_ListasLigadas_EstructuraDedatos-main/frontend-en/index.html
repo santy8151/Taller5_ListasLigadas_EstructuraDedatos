@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Workshop 5 - Doubly Linked Lists</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px; background: #0d1117; color: #e6edf3;
+    font-family: system-ui, sans-serif;
+  }
+  .container { max-width: 820px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 16px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; align-items: center; }
+  select, input, button {
+    background: #161b22; color: #e6edf3; border: 1px solid #30363d;
+    border-radius: 6px; padding: 8px 12px; font-size: 14px;
+  }
+  input { flex: 1; min-width: 160px; }
+  button { cursor: pointer; }
+  button:hover { background: #21262d; }
+  button.danger:hover { border-color: #f85149; }
+  .menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; margin-bottom: 16px; }
+  #terminal {
+    background: #010409; border: 1px solid #30363d; border-radius: 8px;
+    padding: 16px; min-height: 280px; max-height: 420px; overflow-y: auto;
+    font-family: ui-monospace, Consolas, monospace; font-size: 14px;
+    white-space: pre-wrap; color: #7ee787;
+  }
+  .error { color: #f85149; }
+  .info { color: #8b949e; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Workshop 5 - Generic Doubly Linked List</h1>
+
+  <div class="row">
+    <label for="type">Data type:</label>
+    <select id="type">
+      <option value="int">Integers</option>
+      <option value="double">Decimals</option>
+      <option value="string">Strings</option>
+    </select>
+    <input id="value" type="text" placeholder="Value (for options 1, 7, 8, and 9)">
+  </div>
+
+  <div class="menu">
+    <button data-op="1">1. Add</button>
+    <button data-op="2">2. Show forward</button>
+    <button data-op="3">3. Show backward</button>
+    <button data-op="4">4. Sort descending</button>
+    <button data-op="5">5. Show mode(s)</button>
+    <button data-op="6">6. Show graph</button>
+    <button data-op="7">7. Exists</button>
+    <button data-op="8">8. Remove one occurrence</button>
+    <button data-op="9">9. Remove all occurrences</button>
+    <button data-op="0" class="danger">0. Clear screen</button>
+  </div>
+
+  <div id="terminal"></div>
+</div>
+
+<script>
+class Node {
+  constructor(data) {
+    this.data = data;
+    this.next = null;
+    this.prev = null;
+  }
+}
+
+class DoublyLinkedList {
+  constructor(compare) {
+    this.compare = compare;
+    this.head = null;
+    this.tail = null;
+    this.count = 0;
+    this.descending = false;
+  }
+
+  compareOrder(a, b) {
+    return this.descending ? this.compare(b, a) : this.compare(a, b);
+  }
+
+  add(data) {
+    const newNode = new Node(data);
+
+    if (this.head === null) {
+      this.head = newNode;
+      this.tail = newNode;
+      this.count++;
+      return;
+    }
+
+    let current = this.head;
+    while (current !== null && this.compareOrder(data, current.data) >= 0) {
+      current = current.next;
+    }
+
+    if (current === null) {
+      this.tail.next = newNode;
+      newNode.prev = this.tail;
+      this.tail = newNode;
+    } else {
+      newNode.next = current;
+      newNode.prev = current.prev;
+
+      if (current.prev !== null) current.prev.next = newNode;
+      else this.head = newNode;
+
+      current.prev = newNode;
+    }
+    this.count++;
+  }
+
+  showForward() {
+    if (this.head === null) return "The list is empty.";
+    const parts = [];
+    for (let n = this.head; n !== null; n = n.next) parts.push(n.data);
+    return parts.join(", ");
+  }
+
+  showBackward() {
+    if (this.tail === null) return "The list is empty.";
+    const parts = [];
+    for (let n = this.tail; n !== null; n = n.prev) parts.push(n.data);
+    return parts.join(", ");
+  }
+
+  sortDescending() {
+    if (this.descending || this.count < 2) {
+      this.descending = true;
+      return;
+    }
+
+    let current = this.head;
+    while (current !== null) {
+      const temp = current.next;
+      current.next = current.prev;
+      current.prev = temp;
+      current = current.prev;
+    }
+
+    const aux = this.head;
+    this.head = this.tail;
+    this.tail = aux;
+
+    this.descending = true;
+  }
+
+  getOccurrences() {
+    const result = [];
+    for (let n = this.head; n !== null; n = n.next) {
+      const last = result[result.length - 1];
+      if (last && this.compare(last.value, n.data) === 0) last.times++;
+      else result.push({ value: n.data, times: 1 });
+    }
+    return result;
+  }
+
+  showModes() {
+    if (this.head === null) return "The list is empty.";
+
+    const occurrences = this.getOccurrences();
+    const max = Math.max(...occurrences.map(o => o.times));
+    const modes = occurrences.filter(o => o.times === max).map(o => o.value);
+
+    if (modes.length === 1) return `The mode is ${modes[0]}.`;
+
+    const start = modes.slice(0, -1).join(", ");
+    return `The modes are ${start} and ${modes[modes.length - 1]}.`;
+  }
+
+  showGraph() {
+    if (this.head === null) return "The list is empty.";
+    return this.getOccurrences()
+      .map(o => `${o.value} ${"*".repeat(o.times)}`)
+      .join("\n");
+  }
+
+  findNode(data) {
+    for (let n = this.head; n !== null; n = n.next) {
+      if (this.compare(n.data, data) === 0) return n;
+    }
+    return null;
+  }
+
+  exists(data) {
+    return this.findNode(data) !== null;
+  }
+
+  unlinkNode(node) {
+    if (node.prev !== null) node.prev.next = node.next;
+    else this.head = node.next;
+
+    if (node.next !== null) node.next.prev = node.prev;
+    else this.tail = node.prev;
+
+    this.count--;
+  }
+
+  removeOne(data) {
+    const node = this.findNode(data);
+    if (node === null) return false;
+    this.unlinkNode(node);
+    return true;
+  }
+
+  removeAll(data) {
+    let removed = 0;
+    let current = this.head;
+    while (current !== null) {
+      const next = current.next;
+      if (this.compare(current.data, data) === 0) {
+        this.unlinkNode(current);
+        removed++;
+      }
+      current = next;
+    }
+    return removed;
+  }
+}
+
+const terminal = document.getElementById("terminal");
+const selectType = document.getElementById("type");
+const inputValue = document.getElementById("value");
+
+const numberComparator = (a, b)

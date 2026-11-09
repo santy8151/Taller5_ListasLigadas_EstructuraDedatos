@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taller 5 - Listas Doblemente Ligadas</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px; background: #0d1117; color: #e6edf3;
+    font-family: system-ui, sans-serif;
+  }
+  .contenedor { max-width: 820px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 16px; }
+  .fila { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; align-items: center; }
+  select, input, button {
+    background: #161b22; color: #e6edf3; border: 1px solid #30363d;
+    border-radius: 6px; padding: 8px 12px; font-size: 14px;
+  }
+  input { flex: 1; min-width: 160px; }
+  button { cursor: pointer; }
+  button:hover { background: #21262d; }
+  button.peligro:hover { border-color: #f85149; }
+  .menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; margin-bottom: 16px; }
+  #terminal {
+    background: #010409; border: 1px solid #30363d; border-radius: 8px;
+    padding: 16px; min-height: 280px; max-height: 420px; overflow-y: auto;
+    font-family: ui-monospace, Consolas, monospace; font-size: 14px;
+    white-space: pre-wrap; color: #7ee787;
+  }
+  .error { color: #f85149; }
+  .info { color: #8b949e; }
+</style>
+</head>
+<body>
+<div class="contenedor">
+  <h1>Taller 5 - Lista doblemente ligada genérica</h1>
+
+  <div class="fila">
+    <label for="tipo">Tipo de dato:</label>
+    <select id="tipo">
+      <option value="int">Enteros</option>
+      <option value="double">Decimales</option>
+      <option value="string">Texto</option>
+    </select>
+    <input id="valor" type="text" placeholder="Valor (para opciones 1, 7, 8 y 9)">
+  </div>
+
+  <div class="menu">
+    <button data-op="1">1. Adicionar</button>
+    <button data-op="2">2. Mostrar hacia adelante</button>
+    <button data-op="3">3. Mostrar hacia atrás</button>
+    <button data-op="4">4. Ordenar descendentemente</button>
+    <button data-op="5">5. Mostrar la(s) moda(s)</button>
+    <button data-op="6">6. Mostrar gráfico</button>
+    <button data-op="7">7. Existe</button>
+    <button data-op="8">8. Eliminar una ocurrencia</button>
+    <button data-op="9">9. Eliminar todas las ocurrencias</button>
+    <button data-op="0" class="peligro">0. Limpiar pantalla</button>
+  </div>
+
+  <div id="terminal"></div>
+</div>
+
+<script>
+class Nodo {
+  constructor(dato) {
+    this.dato = dato;
+    this.siguiente = null;
+    this.anterior = null;
+  }
+}
+
+class ListaDoble {
+  constructor(comparar) {
+    this.comparar = comparar;
+    this.cabeza = null;
+    this.cola = null;
+    this.cantidad = 0;
+    this.descendente = false;
+  }
+
+  comparaOrden(a, b) {
+    return this.descendente ? this.comparar(b, a) : this.comparar(a, b);
+  }
+
+  adicionar(dato) {
+    const nuevo = new Nodo(dato);
+
+    if (this.cabeza === null) {
+      this.cabeza = nuevo;
+      this.cola = nuevo;
+      this.cantidad++;
+      return;
+    }
+
+    let actual = this.cabeza;
+    while (actual !== null && this.comparaOrden(dato, actual.dato) >= 0) {
+      actual = actual.siguiente;
+    }
+
+    if (actual === null) {
+      this.cola.siguiente = nuevo;
+      nuevo.anterior = this.cola;
+      this.cola = nuevo;
+    } else {
+      nuevo.siguiente = actual;
+      nuevo.anterior = actual.anterior;
+
+      if (actual.anterior !== null) actual.anterior.siguiente = nuevo;
+      else this.cabeza = nuevo;
+
+      actual.anterior = nuevo;
+    }
+    this.cantidad++;
+  }
+
+  mostrarAdelante() {
+    if (this.cabeza === null) return "La lista está vacía.";
+    const partes = [];
+    for (let n = this.cabeza; n !== null; n = n.siguiente) partes.push(n.dato);
+    return partes.join(", ");
+  }
+
+  mostrarAtras() {
+    if (this.cola === null) return "La lista está vacía.";
+    const partes = [];
+    for (let n = this.cola; n !== null; n = n.anterior) partes.push(n.dato);
+    return partes.join(", ");
+  }
+
+  ordenarDescendentemente() {
+    if (this.descendente || this.cantidad < 2) {
+      this.descendente = true;
+      return;
+    }
+
+    let actual = this.cabeza;
+    while (actual !== null) {
+      const temp = actual.siguiente;
+      actual.siguiente = actual.anterior;
+      actual.anterior = temp;
+      actual = actual.anterior;
+    }
+
+    const aux = this.cabeza;
+    this.cabeza = this.cola;
+    this.cola = aux;
+
+    this.descendente = true;
+  }
+
+  obtenerOcurrencias() {
+    const resultado = [];
+    for (let n = this.cabeza; n !== null; n = n.siguiente) {
+      const ultimo = resultado[resultado.length - 1];
+      if (ultimo && this.comparar(ultimo.valor, n.dato) === 0) ultimo.veces++;
+      else resultado.push({ valor: n.dato, veces: 1 });
+    }
+    return resultado;
+  }
+
+  mostrarModas() {
+    if (this.cabeza === null) return "La lista está vacía.";
+
+    const ocurrencias = this.obtenerOcurrencias();
+    const max = Math.max(...ocurrencias.map(o => o.veces));
+    const modas = ocurrencias.filter(o => o.veces === max).map(o => o.valor);
+
+    if (modas.length === 1) return `La moda es ${modas[0]}.`;
+
+    const inicio = modas.slice(0, -1).join(", ");
+    return `Las modas son ${inicio} y ${modas[modas.length - 1]}.`;
+  }
+
+  mostrarGrafico() {
+    if (this.cabeza === null) return "La lista está vacía.";
+    return this.obtenerOcurrencias()
+      .map(o => `${o.valor} ${"*".repeat(o.veces)}`)
+      .join("\n");
+  }
+
+  buscarNodo(dato) {
+    for (let n = this.cabeza; n !== null; n = n.siguiente) {
+      if (this.comparar(n.dato, dato) === 0) return n;
+    }
+    return null;
+  }
+
+  existe(dato) {
+    return this.buscarNodo(dato) !== null;
+  }
+
+  desenlazarNodo(nodo) {
+    if (nodo.anterior !== null) nodo.anterior.siguiente = nodo.siguiente;
+    else this.cabeza = nodo.siguiente;
+
+    if (nodo.siguiente !== null) nodo.siguiente.anterior = nodo.anterior;
+    else this.cola = nodo.anterior;
+
+    this.cantidad--;
+  }
+
+  eliminarUna(dato) {
+    const nodo = this.buscarNodo(dato);
+    if (nodo === null) return false;
+    this.desenlazarNodo(nodo);
+    return true;
+  }
+
+  eliminarTodas(dato) {
+    let eliminados = 0;
+    let actual = this.cabeza;
+    while (actual !== null) {
+      const siguiente = actual.siguiente;
+      if (this.comparar(actual.dato, dato) === 0) {
+        this.desenlazarNodo(actual);
+        eliminados++;
+      }
+      actual = siguiente;
+    }
+    return eliminados;
+  }
+}
+
+const terminal = document.getElementById("terminal");
+const selectTipo = document.getElementById("tipo");
+const inputValor = document.getElementById("valor");
+
+const comparadorNumero = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+const comparadorTexto = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+
+let lista = crearLista();
+
+function crearLista() {
+  const comparar = selectTipo.value === "string" ? comparadorTexto : comparadorNumero;
+  return new ListaDoble(comparar);
+}
+
+function escribir(texto, clase = "") {
+  const linea = document.createElement("div");
+  if (clase) linea.className = clase;
+  linea.textContent = texto;
+  terminal.appendChild(linea);
+  terminal.scrollTop = terminal.scrollHeight;
+}
+
+function convertir(texto) {
+  const tipo = selectTipo.value;
+  const limpio = texto.trim();
+  if (limpio === "") return { ok: false };
+
+  if (tipo === "string") return { ok: true, valor: limpio };
+
+  const numero = Number(limpio);
+  if (Number.isNaN(numero)) return { ok: false };
+  if (tipo === "int" && !Number.isInteger(numero)) return { ok: false };
+  return { ok: true, valor: numero };
+}
+
+function leerValor() {
+  const r = convertir(inputValor.value);
+  if (!r.ok) {
+    escribir("Valor inválido para el tipo seleccionado.", "error");
+    return null;
+  }
+  return r;
+}
+
+function ejecutar(opcion) {
+  escribir(`> Opción ${opcion}`, "info");
+
+  switch (opcion) {
+    case "1": {
+      const r = leerValor();
+      if (!r) return;
+      lista.adicionar(r.valor);
+      escribir("Elemento agregado.");
+      inputValor.value = "";
+      inputValor.focus();
+      break;
+    }
+    case "2": escribir(lista.mostrarAdelante()); break;
+    case "3": escribir(lista.mostrarAtras()); break;
+    case "4":
+      lista.ordenarDescendentemente();
+      escribir("Lista ordenada descendentemente.");
+      break;
+    case "5": escribir(lista.mostrarModas()); break;
+    case "6": escribir(lista.mostrarGrafico()); break;
+    case "7": {
+      const r = leerValor();
+      if (!r) return;
+      escribir(lista.existe(r.valor) ? `Sí existe el ${r.valor}.` : `No existe el ${r.valor}.`);
+      break;
+    }
+    case "8": {
+      const r = leerValor();
+      if (!r) return;
+      escribir(lista.eliminarUna(r.valor)
+        ? `Se eliminó una ocurrencia del ${r.valor}.`
+        : `No existe el ${r.valor}.`);
+      break;
+    }
+    case "9": {
+      const r = leerValor();
+      if (!r) return;
+      const cuantos = lista.eliminarTodas(r.valor);
+      escribir(cuantos > 0
+        ? `Se eliminaron ${cuantos} ocurrencia(s) del ${r.valor}.`
+        : `No existe el ${r.valor}.`);
+      break;
+    }
+    case "0":
+      terminal.innerHTML = "";
+      break;
+  }
+}
+
+document.querySelectorAll("button[data-op]").forEach(btn => {
+  btn.addEventListener("click", () => ejecutar(btn.dataset.op));
+});
+
+inputValor.addEventListener("keydown", e => {
+  if (e.key === "Enter") ejecutar("1");
+});
+
+selectTipo.addEventListener("change", () => {
+  lista = crearLista();
+  terminal.innerHTML = "";
+  escribir("Tipo cambiado. La lista se reinició.", "info");
+});
+
+escribir("Lista doblemente ligada lista. Escribe un valor y pulsa Adicionar (o Enter).", "info");
+</script>
+</body>
+</html>
