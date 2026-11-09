@@ -1,21 +1,17 @@
-using System;
+namespace ListasLigadas;
 
-namespace Workshop5.Exceptions
+public class ListException : Exception
 {
-    public class ListException : Exception
-    {
-        public ListException(string message) : base(message) { }
-    }
+    public ListException(string mensaje) : base(mensaje) { }
+}
 
-    public class EmptyListException : ListException
-    {
-        public EmptyListException() : base("The list is empty.") { }
-        public EmptyListException(string message) : base(message) { }
-    }
+public class EmptyListException : ListException
+{
+    public EmptyListException() : base("La lista está vacía.") { }
+}
 
-    public class ElementNotFoundException : ListException
-    {
-        public ElementNotFoundException(object value) 
-            : base($"Element '{value}' does not exist in the list.") { }
-    }
+public class ElementNotFoundException : ListException
+{
+    public ElementNotFoundException(object valor)
+        : base($"No existe el {valor} en la lista.") { }
 }
